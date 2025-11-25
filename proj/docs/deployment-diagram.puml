@@ -1,0 +1,37 @@
+@startuml
+title Energy Management Platform - Deployment Diagram
+
+node "Client Browser" as Browser {
+  component "React Frontend\n(http://localhost:3000)" as FE
+}
+
+rectangle "Docker Network" {
+  node "API Gateway\nSpring Cloud Gateway\nport 8080" as Gateway
+
+  node "Auth Service\nSpring Boot + PostgreSQL" as Auth {
+    component "Auth Service App\nport 8083" as AuthApp
+    database "auth-db\n(PostgreSQL 15)" as AuthDB
+  }
+
+  node "User Service\nSpring Boot + PostgreSQL" as User {
+    component "User Service App\nport 8081" as UserApp
+    database "user-db\n(PostgreSQL 15)" as UserDB
+  }
+
+  node "Device Service\nSpring Boot + PostgreSQL" as Device {
+    component "Device Service App\nport 8082" as DeviceApp
+    database "device-db\n(PostgreSQL 15)" as DeviceDB
+  }
+}
+
+Browser --> Gateway : HTTPS/HTTP (REST)\nJWT Bearer Tokens
+Gateway --> AuthApp : REST /api/auth/*
+Gateway --> UserApp : REST /api/users/*
+Gateway --> DeviceApp : REST /api/devices/*
+
+AuthApp --> AuthDB : JDBC
+UserApp --> UserDB : JDBC
+DeviceApp --> DeviceDB : JDBC
+
+@enduml
+

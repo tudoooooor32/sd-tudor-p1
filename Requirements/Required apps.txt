@@ -1,0 +1,7 @@
+1. postgres
+2. pg admin
+3. intellij.
+4. Mysql
+5. .net
+6. react
+7. spring

@@ -1,0 +1,18 @@
+user(id,username,password etc) -> db//microservice
+device(id,cons,user_id,token etc) -> db+user_table(duplicam dateel de care4 avem nevoie ex: id, username)//microservice legam cu api call ex: id+ username, si pt delete si pt update
+
+
+aplicate=e spring : rest template(api call uri)
+
+
+
+users: id, name, ..., asociere: apelam o metoda din microserviciul de utilizator care foloseste rest tempplate din alt microserviciu
+
+2 microservicii + docker files java 25  trebuie sa verificam daca s a generat docker file ul si unde 
+exact aceeasi trb pt microserviciul de device uri
+adaugam docker compose si ne asiguram ca la build e numele folderului exact de la proiect pentru fiecare
+sa ne asiguram la db ca se potrivesc numele
+mergem la trafic la rute 
+path prefix ii pt frontednd momentan nu ma intereseaza
+sa mai modificam in properties sa punem docker host ul in loc de loacal host
+

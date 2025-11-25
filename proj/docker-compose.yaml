@@ -1,0 +1,121 @@
+version: '3.9'
+
+services:
+  auth-db:
+    image: postgres:16
+    container_name: auth-db
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: auth
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth -d authdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    networks:
+      - sd-net
+
+  user-db:
+    image: postgres:15-alpine
+    container_name: user-db
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    networks:
+      - sd-net
+
+  device-db:
+    image: postgres:15-alpine
+    container_name: device-db
+    environment:
+      POSTGRES_DB: device_db
+      POSTGRES_USER: device
+      POSTGRES_PASSWORD: device
+    ports:
+      - "5435:5432"
+    volumes:
+      - device-db-data:/var/lib/postgresql/data
+    networks:
+      - sd-net
+
+  auth-service:
+    build:
+      context: ./backend/auth-service
+    container_name: auth-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      JWT_SECRET: ${JWT_SECRET:-super-secret-change-me}
+      AUTH_DB_USER: auth
+      AUTH_DB_PASS: auth
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/authdb
+    depends_on:
+      - auth-db
+    ports:
+      - "8083:8083"
+    networks:
+      - sd-net
+
+  user-service:
+    build:
+      context: ./backend/user-service
+    container_name: user-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://user-db:5432/user_db
+    depends_on:
+      - user-db
+    ports:
+      - "8081:8081"
+    networks:
+      - sd-net
+
+  device-service:
+    build:
+      context: ./backend/device-service
+    container_name: device-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://device-db:5432/device_db
+    depends_on:
+      - device-db
+    ports:
+      - "8082:8082"
+    networks:
+      - sd-net
+
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+    container_name: api-gateway
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8083
+      USER_SERVICE_URL: http://user-service:8081
+      DEVICE_SERVICE_URL: http://device-service:8082
+      JWT_SECRET: ${JWT_SECRET:-super-secret-change-me}
+    depends_on:
+      - auth-service
+      - user-service
+      - device-service
+    ports:
+      - "8080:8080"
+    networks:
+      - sd-net
+
+volumes:
+  auth-db-data:
+  user-db-data:
+  device-db-data:
+
+networks:
+  sd-net:
+    driver: bridge
